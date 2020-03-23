@@ -1,0 +1,13 @@
+[package]
+name = "yo-gurt"
+version = "0.1.0"
+authors = ["gpi <gpimpale29@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crc = "1.8"
