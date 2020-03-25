@@ -24,7 +24,7 @@ pub enum PartOfSpeech {
     RB,      // adverb
     RBR,     // comparative adverb
     RBS,     // superlative adverb
-    RP,      // paricle
+    RP,      // particle
     SYM,     // symbole
     TO,      // to
     UH,      // interjection
@@ -50,92 +50,94 @@ pub enum PartOfSpeech {
 }
 
 use std::collections::HashSet;
+use std::collections::HashMap;
 
-type VocabIndex = usize;
-
-pub enum SpecialRule {
-    OneToMany {
-        origs:String,
-        results:Vec<String>
-    },
-    ManyToOne {
-        origs:Vec<String>,
-        result:String
-    },
+pub struct Vocab {
+    words:HashSet<String>
 }
 
-pub struct RuleSet {
+impl Vocab {
+    pub fn new() -> Vocab {
+        Vocab {
+            words: HashSet::new()
+        }
+    }
+
+    pub fn new_from_vec(strings:Vec<&str>) -> Vocab {
+        let mut v = Vocab::new();
+        for string in strings {
+            v.add(string);
+        }
+        v
+    }
+
+    pub fn add(&mut self, word:&str) -> &str {
+        self.words.get_or_insert_owned(word)
+    }
+}
+
+
+// 'doc is the lifetime of the doc
+// 'vocab is the lifetime of the vocab
+
+pub struct Token<'doc, 'vocab> {
+    string: &'doc str,
+    lemma: &'vocab str,
+}
+
+pub struct RuleSet<'vocab> {
     // General Prefixes
-    prefix: HashSet<String>, // Prefixes
+    general_prefix: HashSet<&'vocab str>, // Prefixes
     // General Suffixes
-    suffix: HashSet<String>, // Suffixes (n't, 've, etc)
-    exact: HashSet<String>, // N.Y.. U.S., etc
+    general_suffix: HashSet<&'vocab str>, // Suffixes (n't, 've, etc)
+    special_expand: HashMap<&'vocab str, Vec<&'vocab str>>, // N.Y.. U.S., etc
 }
 
-impl RuleSet {
-    // Optionally returns a token
-    pub fn get_exact<'a>(&self, string: &'a str) -> Option<&'a str> {
-        if self.exact.contains(string) {
-            Some(string)
+impl<'vocab> RuleSet<'vocab> {
+
+    // If there is an exact match between this string and a special expand, 
+    // We create a set of tokens with lemmas and the text
+    pub fn get_exact<'doc>(&self, string: &'doc str) -> Option<Vec<Token<'doc, 'vocab>>> {
+        let ret = self.special_expand.get(&string);
+        if let Some(vs) = ret {
+            Some(vs.iter().map(|lemma| Token { string, lemma }).collect())
         } else {
             None
         }
     }
+
     // Matches the longest prefix
-    pub fn get_prefix_remainder<'a>(&self, string: &'a str) -> Option<(&'a str, &'a str)> {
+    // Returns A remainder, and a prefix token
+    pub fn get_prefix_remainder<'doc>(&self, string: &'doc str) -> Option<(Token<'doc, 'vocab>, &'doc str)> {
         for i in string.len()..0 {
-            if self.prefix.contains(&string[..i]) {
-                return Some( ( &string[..i], &string[i..]) );
+            if let Some(prefix_lemma) = self.general_prefix.get(&string[..i]) {
+                return Some( ( Token { string: &string[..i], lemma: prefix_lemma}, &string[i..]) );
             }
         }
         return None;
     }
 
     // Matches the longest suffix
-    pub fn get_suffix_remainder<'a>(&self, string: &'a str) -> Option<(&'a str, &'a str)> {
+    pub fn get_suffix_remainder<'doc>(&self, string: &'doc str) -> Option<(Token<'doc, 'vocab>, &'doc str)> {
         for i in string.len()..0 {
-            if self.suffix.contains(&string[..i]) {
-                return Some( ( &string[i..], &string[..i] ) );
+            if let Some(suffix_lemma) = self.general_suffix.get(&string[i..]) {
+                return Some( ( Token { string: &string[i..], lemma: suffix_lemma}, &string[..i]) );
             }
         }
         return None;
     }
 }
 
-pub struct Vocab {}
-
-type NodeIndex = usize;
-
-pub enum Node<'a> {
-    Root,
-    Token {
-        string: &'a str,
-        lemma: VocabIndex,
-        pos: PartOfSpeech,
-        parent: NodeIndex,
-    },
-}
-
-// Returns an optional span if the rule is matched
-// pub fn matchRule(string:&str, rule:&Rule) -> bool {
-//     match(rule.kind) {
-//         FullToken => rule.text == string,
-//         Prefix => rule.text == string[0..min(rule.text.len(), string.len()),
-//         Suffix => rule
-//
-//     }
-// }
-
 // Tokenize LOWERCASE string
 // Uses spacy algorithm
-pub fn tokenize<'a>(string: &'a String, ruleset: &RuleSet) -> Vec<&'a str> {
+pub fn tokenize<'doc, 'vocab>(string: &'doc String, ruleset: &'vocab RuleSet) -> Vec<Token<'doc, 'vocab>> {
     let mut tokens = Vec::new();
 
     for s in string.split_whitespace() {
         let mut substr = s;
         loop {
-            if let Some(token) = ruleset.get_exact(&substr) {
-                tokens.push(token);
+            if let Some(mut token) = ruleset.get_exact(&substr) {
+                tokens.append(&mut token);
                 // this will cause us to start viewing the next substr
                 break;
             } else if let Some((token, remainder)) = ruleset.get_prefix_remainder(&substr) {
