@@ -1,5 +1,5 @@
 [package]
-name = "yo-gurt"
+name = "yogurt"
 version = "0.1.0"
 authors = ["gpi <gpimpale29@gmail.com>"]
 edition = "2018"

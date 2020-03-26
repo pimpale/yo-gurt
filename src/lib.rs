@@ -2,9 +2,8 @@
 
 use std::collections::HashMap;
 use std::collections::HashSet;
-use typed_arena::Arena;
 
-mod english;
+pub mod english;
 
 // Definitions from here:
 // https://web.stanford.edu/~jurafsky/slp3/8.pdf
@@ -160,6 +159,8 @@ pub fn tokenize<'doc, 'vocab>(
                 substr = remainder;
                 continue;
             }
+            // If we can't do anything with it, break
+            break;
         }
     }
     tokens
