@@ -57,7 +57,7 @@ pub enum PartOfSpeech {
 
 // 'doc is the lifetime of the doc
 // 'vocab is the lifetime of the vocab
-
+#[derive(Debug)]
 pub struct Token<'doc, 'vocab> {
     string: &'doc str,
     lemma: &'vocab str,
