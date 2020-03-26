@@ -1,8 +1,8 @@
 #![feature(hash_set_entry)]
 
-use typed_arena::Arena;
-use std::collections::HashSet;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use typed_arena::Arena;
 
 mod english;
 
@@ -73,20 +73,19 @@ pub struct RuleSet<'vocab> {
 }
 
 impl<'vocab> RuleSet<'vocab> {
-
     pub fn new(
-        general_prefix:HashSet<&'vocab str>,
-        general_suffix:HashSet<&'vocab str>,
-        special_expand:HashMap<&'vocab str, Vec<&'vocab str>>)
-    -> RuleSet<'vocab> {
+        general_prefix: HashSet<&'vocab str>,
+        general_suffix: HashSet<&'vocab str>,
+        special_expand: HashMap<&'vocab str, Vec<&'vocab str>>,
+    ) -> RuleSet<'vocab> {
         RuleSet {
             general_prefix,
             general_suffix,
-            special_expand
+            special_expand,
         }
     }
 
-    // If there is an exact match between this string and a special expand, 
+    // If there is an exact match between this string and a special expand,
     // We create a set of tokens with lemmas and the text
     pub fn special_expand<'doc>(&self, string: &'doc str) -> Option<Vec<Token<'doc, 'vocab>>> {
         let ret = self.special_expand.get(&string);
@@ -99,20 +98,38 @@ impl<'vocab> RuleSet<'vocab> {
 
     // Matches the longest prefix
     // Returns A remainder, and a prefix token
-    pub fn general_prefix_remainder<'doc>(&self, string: &'doc str) -> Option<(Token<'doc, 'vocab>, &'doc str)> {
+    pub fn general_prefix_remainder<'doc>(
+        &self,
+        string: &'doc str,
+    ) -> Option<(Token<'doc, 'vocab>, &'doc str)> {
         for i in string.len()..0 {
             if let Some(prefix_lemma) = self.general_prefix.get(&string[..i]) {
-                return Some( ( Token { string: &string[..i], lemma: prefix_lemma}, &string[i..]) );
+                return Some((
+                    Token {
+                        string: &string[..i],
+                        lemma: prefix_lemma,
+                    },
+                    &string[i..],
+                ));
             }
         }
         return None;
     }
 
     // Matches the longest suffix
-    pub fn general_suffix_remainder<'doc>(&self, string: &'doc str) -> Option<(Token<'doc, 'vocab>, &'doc str)> {
+    pub fn general_suffix_remainder<'doc>(
+        &self,
+        string: &'doc str,
+    ) -> Option<(Token<'doc, 'vocab>, &'doc str)> {
         for i in string.len()..0 {
             if let Some(suffix_lemma) = self.general_suffix.get(&string[i..]) {
-                return Some( ( Token { string: &string[i..], lemma: suffix_lemma}, &string[..i]) );
+                return Some((
+                    Token {
+                        string: &string[i..],
+                        lemma: suffix_lemma,
+                    },
+                    &string[..i],
+                ));
             }
         }
         return None;
@@ -121,7 +138,10 @@ impl<'vocab> RuleSet<'vocab> {
 
 // Tokenize LOWERCASE string
 // Uses spacy algorithm
-pub fn tokenize<'doc, 'vocab>(string: &'doc String, ruleset: &'vocab RuleSet) -> Vec<Token<'doc, 'vocab>> {
+pub fn tokenize<'doc, 'vocab>(
+    string: &'doc String,
+    ruleset: &'vocab RuleSet,
+) -> Vec<Token<'doc, 'vocab>> {
     let mut tokens = Vec::new();
 
     for s in string.split_whitespace() {
