@@ -94,17 +94,26 @@ impl<'doc, 'vocab> Parser<'doc, 'vocab> {
         }
     }
 
-    pub fn queue_empty(&self) -> bool {
-        self.queue.len() == 0
-    }
+    fn valid_moves(&self) -> Vec<Moves> {
+        let mut valid = Vec::new();
+        if self.queue.len() > 0 {
+            valid.push(Moves::Shift);
+        }
 
-    pub fn stack_arcable(&self) -> bool {
-        self.stack.len() > 1
+        if self.stack.len() > 1 {
+            valid.push(Moves::RightArc);
+
+            if self.stack[self.stack.len() - 2] != TokenIndex::Root {
+                valid.push(Moves::LeftArc);
+            }
+        }
+        return valid;
     }
 
     // pseudocode taken from: https://www.diva-portal.org/smash/get/diva2:661423/FULLTEXT01.pdf
 
     // Dequeues the topmost node onto the stack
+    // Preconditions:
     // Make sure queue is not empty before using
     pub fn shift(&mut self) -> () {
         self.stack.push(self.queue.pop_front().unwrap());
@@ -112,19 +121,27 @@ impl<'doc, 'vocab> Parser<'doc, 'vocab> {
 
     // adds new arc with label from the topmost node on the stack to second topmost node on the
     // stack, then removes the second topmost node
+    // Preconditions:
     // Ensure there are 2 nodes on the stack
+    // Ensure that Root is not the second element on the stack
     pub fn left_arc(&mut self, label: PartOfSpeech) {
         let parent = *self.stack.last().unwrap();
         let child = self.stack.remove(self.stack.len() - 2);
+        if child == TokenIndex::Root {
+            panic!("Can't make root a child");
+        }
         self.arcs.insert(TokenArc { parent, child, label});
     }
 
     // adds new arc with label from the second topmost node on the stack to the topmost node and
     // removes the topmost node
+    // Preconditions:
     // Ensure there are 2 nodes on the stack
     pub fn right_arc(&mut self, label: PartOfSpeech) {
-        let parent = *self.stack.get(self.stack.len() - 2).unwrap();
+        let parent = self.stack[self.stack.len() - 2];
         let child = self.stack.pop().unwrap();
+        // it's not possible for root to be a child here because we guarantee that there are 2
+        // nodes on the stack, and root node is always the bottommost node
         self.arcs.insert(TokenArc { parent, child, label});
     }
 }
