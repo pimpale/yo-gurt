@@ -1,57 +1,27 @@
 use super::Token;
 use std::collections::HashSet;
 use std::collections::VecDeque;
-use std::iter;
+use std::cmp::Eq;
+use std::cmp::PartialEq;
+use std::hash::Hash;
 
-// Definitions from here:
-// https://web.stanford.edu/~jurafsky/slp3/8.pdf
-#[derive(std::hash::Hash, Clone, Copy, std::cmp::Eq, std::cmp::PartialEq)]
-pub enum PartOfSpeech {
-    CC,      // coordinating conjunction
-    CD,      // cardinal number
-    DT,      // determiner
-    EX,      // existential there
-    FW,      // foreign word
-    IN,      // preposition/subordinating conjunction
-    JJ,      // adjective
-    JJR,     // comparative adjective
-    JJS,     // superlative adjective
-    LS,      // list item marker
-    MD,      // modal
-    NN,      // singular or mass noun
-    NNS,     // noun plural
-    NNP,     // proper noun, singular
-    NNPS,    // proper noun, plural
-    PDT,     // predeterminer
-    POS,     // possessive ending
-    PRP,     // personal pronoun
-    PRP_S,   // possessive pronoun
-    RB,      // adverb
-    RBR,     // comparative adverb
-    RBS,     // superlative adverb
-    RP,      // particle
-    SYM,     // symbole
-    TO,      // to
-    UH,      // interjection
-    VB,      // verb base form
-    VBD,     // verb past tense
-    VBG,     // verb gerund
-    VBN,     // verb past participle
-    VBP,     // verb non 3sg persent
-    VBZ,     // verb 3sg present
-    WDT,     // wh determine
-    WP,      // wh pronoun
-    WP_S,    // wh posess
-    WRB,     // wh adverb
-    DOLLAR,  // $
-    HASH,    // #
-    LQUOTE,  // "
-    RQUOTE,  // "
-    LPAREN,  // (
-    RPAREN,  // )
-    COMMA,   // ,
-    ENDPUNC, // .
-    MIDPUNC, // ;
+#[derive(Hash, Eq, PartialEq)]
+pub enum GrammaticalFunction {
+    // Clausal argument relations
+    NSUBJ, // Nominal Subject
+    DOBJ,  // Direct object
+    IOBJ,  // Indirect Object
+    CCOMP, // clausal complement
+    XCOMP, // open clausal complement
+    // Nominal Modifier Relations
+    NMOD,   // Nominal modifier
+    AMOD,   // Adjectival modifier
+    NUMMOD, // Numeric Modifier
+    APPOS,  // Appositional modifier
+    DET,    // Determiner
+    // Other notable relations
+    CONJ, // conjunct
+    CC,   // coordinating conjunction
 }
 
 pub enum Moves {
@@ -60,19 +30,18 @@ pub enum Moves {
     RightArc,
 }
 
-#[derive(std::hash::Hash, std::cmp::Eq, std::cmp::PartialEq)]
+#[derive(Hash, Eq, PartialEq)]
 struct TokenArc {
     parent: TokenIndex,
     child: TokenIndex,
-    label: PartOfSpeech
+    label: GrammaticalFunction
 }
 
-#[derive(std::hash::Hash, Clone, Copy, std::cmp::Eq, std::cmp::PartialEq)]
+#[derive(Hash, Clone, Copy, Eq, PartialEq)]
 pub enum TokenIndex {
     Root,
     Value(usize),
 }
-
 
 pub struct Parser<'doc, 'vocab> {
     token_backing: Vec<Token<'doc, 'vocab>>,
@@ -124,24 +93,32 @@ impl<'doc, 'vocab> Parser<'doc, 'vocab> {
     // Preconditions:
     // Ensure there are 2 nodes on the stack
     // Ensure that Root is not the second element on the stack
-    pub fn left_arc(&mut self, label: PartOfSpeech) {
+    pub fn left_arc(&mut self, label: GrammaticalFunction) {
         let parent = *self.stack.last().unwrap();
         let child = self.stack.remove(self.stack.len() - 2);
         if child == TokenIndex::Root {
             panic!("Can't make root a child");
         }
-        self.arcs.insert(TokenArc { parent, child, label});
+        self.arcs.insert(TokenArc {
+            parent,
+            child,
+            label,
+        });
     }
 
     // adds new arc with label from the second topmost node on the stack to the topmost node and
     // removes the topmost node
     // Preconditions:
     // Ensure there are 2 nodes on the stack
-    pub fn right_arc(&mut self, label: PartOfSpeech) {
+    pub fn right_arc(&mut self, label: GrammaticalFunction) {
         let parent = self.stack[self.stack.len() - 2];
         let child = self.stack.pop().unwrap();
         // it's not possible for root to be a child here because we guarantee that there are 2
         // nodes on the stack, and root node is always the bottommost node
-        self.arcs.insert(TokenArc { parent, child, label});
+        self.arcs.insert(TokenArc {
+            parent,
+            child,
+            label,
+        });
     }
 }
