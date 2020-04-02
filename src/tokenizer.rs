@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // Definitions from here:
 // https://web.stanford.edu/~jurafsky/slp3/8.pdf
 #[derive(Debug, std::hash::Hash, Clone, Copy, std::cmp::Eq, std::cmp::PartialEq)]
@@ -53,12 +55,17 @@ pub enum PartOfSpeech {
 // 'vocab is the lifetime of the vocab
 #[derive(Debug)]
 pub struct Token {
-    pub string: String,
-    pub norm:String,
     pub lemma:String,
     pub part_of_speech: PartOfSpeech,
 }
 
+enum Feature {
+    Bias,
+    ISuffix,
+    IPref,
+    IPref,
+}
+
 struct Perceptron {
-    weights:HashMap<Feature
+    weights:HashMap<Feature, HashMap<PartOfSpeech, f64>>,
 }

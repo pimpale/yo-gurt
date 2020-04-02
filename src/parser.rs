@@ -1,4 +1,5 @@
-use super::Token;
+/*
+use super::tokenizer::Token;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::cmp::Eq;
@@ -122,3 +123,4 @@ impl<'doc, 'vocab> Parser<'doc, 'vocab> {
         });
     }
 }
+*/
