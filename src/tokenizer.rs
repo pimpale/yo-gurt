@@ -59,13 +59,59 @@ pub struct Token {
     pub part_of_speech: PartOfSpeech,
 }
 
-enum Feature {
+// Lives as long as the model is loaded
+// Don't want to allocate a whole new vec for each feature...
+enum Feature<'model>{
     Bias,
-    ISuffix,
-    IPref,
-    IPref,
+    Suffix {
+        word_index:i8,  // refers to the index of the word. Current word is 0. Next word is 1, Previous word is -1
+        value:&'model [u8], // the chars making up the first part
+    },
+    Prefix {
+        word_index:i8,
+        value:&'model [u8], // the chars making up the first part
+    },
+    Tag {
+        word_index:i8,
+        value:PartOfSpeech,
+    },
+    TagTag {
+        word_indexes:(i8, i8),
+        values: (PartOfSpeech, PartOfSpeech)
+    }
 }
 
-struct Perceptron {
-    weights:HashMap<Feature, HashMap<PartOfSpeech, f64>>,
+impl<'model> Feature<'model> {
+    pub fn new_bias() -> Feature<'model> {
+        Feature {
+            kind:FeatureKind::Bias,
+            word_index: 0,
+            value: None,
+            value1: None
+        }
+    }
+
+    pub fn new_prefix(index:i8, value:&'model [u8]) -> Feature<'model> {
+        Feature {
+            kind:FeatureKind::Prefix,
+            word_index:index,
+            value: Some(value),
+            value1:None,
+        }
+    }
+
+    pub fn new_suffix(index:i8, value:&'model [u8]) -> Feature<'model> {
+        Feature {
+            kind:FeatureKind::Suffix,
+            word_index:index,
+            value: Some(value),
+            value1:None,
+        }
+    }
+
+    pub fn new_tag
+}
+
+struct Perceptron<'model> {
+    weights:HashMap<Feature<'model>, HashMap<PartOfSpeech, f64>>,
 }

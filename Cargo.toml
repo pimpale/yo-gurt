@@ -11,3 +11,4 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 unidecode = "0.3.0"
+bimap = "0.4"
