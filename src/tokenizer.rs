@@ -1,3 +1,4 @@
+use super::lexemizer::Lexeme;
 use std::collections::HashMap;
 
 // Definitions from here:
@@ -81,37 +82,15 @@ enum Feature<'model>{
     }
 }
 
-impl<'model> Feature<'model> {
-    pub fn new_bias() -> Feature<'model> {
-        Feature {
-            kind:FeatureKind::Bias,
-            word_index: 0,
-            value: None,
-            value1: None
-        }
-    }
-
-    pub fn new_prefix(index:i8, value:&'model [u8]) -> Feature<'model> {
-        Feature {
-            kind:FeatureKind::Prefix,
-            word_index:index,
-            value: Some(value),
-            value1:None,
-        }
-    }
-
-    pub fn new_suffix(index:i8, value:&'model [u8]) -> Feature<'model> {
-        Feature {
-            kind:FeatureKind::Suffix,
-            word_index:index,
-            value: Some(value),
-            value1:None,
-        }
-    }
-
-    pub fn new_tag
-}
-
 struct Perceptron<'model> {
     weights:HashMap<Feature<'model>, HashMap<PartOfSpeech, f64>>,
 }
+
+impl<'model> Perceptron {
+    
+}
+
+pub fn tokenize(values:Vec<Lexeme>) -> Vec<Token> {
+    
+}
+
