@@ -65,7 +65,7 @@ pub struct Token {
 enum Feature<'model>{
     Bias,
     Suffix {
-        word_index:i8,  // refers to the index of the word. Current word is 0. Next word is 1, Previous word is -1
+        word_index:i8,      // refers to the index of the word. Current word is 0. Next word is 1, Previous word is -1
         value:&'model [u8], // the chars making up the first part
     },
     Prefix {
@@ -76,7 +76,7 @@ enum Feature<'model>{
         word_index:i8,
         value:PartOfSpeech,
     },
-    TagTag {
+    DoubleTag {
         word_indexes:(i8, i8),
         values: (PartOfSpeech, PartOfSpeech)
     }
@@ -86,8 +86,12 @@ struct Perceptron<'model> {
     weights:HashMap<Feature<'model>, HashMap<PartOfSpeech, f64>>,
 }
 
-impl<'model> Perceptron {
-    
+impl<'model> Perceptron<'model> {
+    fn new() -> Perceptron<'model> {
+        Perceptron {
+            weights: HashMap::new()
+        }
+    }
 }
 
 pub fn tokenize(values:Vec<Lexeme>) -> Vec<Token> {
