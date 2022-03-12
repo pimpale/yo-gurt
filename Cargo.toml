@@ -2,7 +2,7 @@
 name = "yogurt"
 version = "0.1.0"
 authors = ["gpi <gpimpale29@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -11,4 +11,4 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 unidecode = "0.3.0"
-bimap = "0.4"
+bimap = "0.6.2"
